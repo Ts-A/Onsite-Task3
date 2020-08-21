@@ -1,0 +1,41 @@
+<%- include('partials/header.ejs') %>
+
+  <form method="POST" action="/" enctype="multipart/form-data">
+    <input id='text' type="text" name="caption">
+    <input id='file' type="file" name='post' >
+    <input id='submit' type="submit">
+  </form>
+
+
+<% 
+  if(error){
+    console.log(message)
+  }
+%>
+
+<%  
+  let postHeader  
+  if( !numberOfPosts ){
+    postHeader = "No Posts Yet"
+  }else{
+    postHeader = "ThumbNail Collection" %> 
+<% }%>
+
+<span id='count' hidden> <%=numberOfPosts%> </span>
+
+
+<div class="allPosts">
+  <p><%=postHeader%></p>
+</div>
+
+<script>
+  const count = Number(document.getElementById("count").textContent)
+  for( let i = 0 ; i < count ; i++ ){
+    const x = document.createElement("img")
+    x.src = `IMAGES/post-${i+1}.png`
+    document.querySelector(".allPosts").appendChild(x)
+  }
+</script>
+
+<%- include('partials/footer.ejs') %>
+
