@@ -24,17 +24,26 @@
 <span id='count' hidden> <%=numberOfPosts%> </span>
 
 
-<div class="allPosts">
-  <p><%=postHeader%></p>
-</div>
+<p><%=postHeader%></p>
+<div class="allPosts"></div>
 
 <script>
   const count = Number(document.getElementById("count").textContent)
   for( let i = 0 ; i < count ; i++ ){
     const x = document.createElement("img")
     x.src = `IMAGES/post-${i+1}.png`
+    x.id  = i+1
     document.querySelector(".allPosts").appendChild(x)
   }
+  if(count){
+    const images = document.getElementsByTagName("img")
+    document.querySelector('.allPosts').childNodes.forEach( ( item )=>{
+      item.addEventListener("dblclick",()=>{
+        item.requestFullscreen().catch(console.log)
+      })
+    })
+}
+
 </script>
 
 <%- include('partials/footer.ejs') %>
