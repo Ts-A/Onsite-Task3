@@ -1,45 +1,54 @@
 <%- include('partials/header.ejs') %>
 
-  <form method="POST" action="/" enctype="multipart/form-data">
-    <input id='text' type="text" name="caption">
-    <input id='file' type="file" name='post' >
-    <input id='submit' type="submit">
-  </form>
+  <main>
+    <%  if(errorHandle.error){ %>
+      <div class='errormessage'><%=errorHandle.message%></div>
+    <%  }else if(errorHandle.error === false){ %>
+          <div class='errormessage'><%=errorHandle.message%></div>  
+    <%  } %>
 
-
-<% 
-  if(error){
-    console.log(message)
-  }
-%>
-
-<%  
-  let postHeader  
-  if( !numberOfPosts ){
-    postHeader = "No Posts Yet"
-  }else{
-    postHeader = "ThumbNail Collection" %> 
-<% }%>
-
-<span id='count' hidden> <%=numberOfPosts%> </span>
-
-
-<p><%=postHeader%></p>
-<div class="allPosts"></div>
+    <form method="POST" action="/" enctype="multipart/form-data">
+      <input id="file" type="file" name="post">
+      <input id="submit" type="submit" value="Submit">
+    </form>
+    
+    <%let postHeader  
+      if( !numberOfPosts ){
+        postHeader = "No Posts Yet"
+      }else{
+        postHeader = "Your collection" %> 
+    <% }%>
+    
+    <span id='count' hidden> <%=numberOfPosts%> </span>
+    
+    <div class="postHeader"><%=postHeader%></div>
+    <div class="allPosts"></div>
+  </main>
 
 <script>
   const count = Number(document.getElementById("count").textContent)
   for( let i = 0 ; i < count ; i++ ){
     const x = document.createElement("img")
-    x.src = `IMAGES/post-${i+1}.png`
-    x.id  = i+1
+    const old = document.createElement("img")
+    x.src   = `IMAGES/post-${i+1}.png`
+    x.id    = i+1
+    x.fullscreen = false
+    x.classList.add("image-box")
     document.querySelector(".allPosts").appendChild(x)
   }
   if(count){
     const images = document.getElementsByTagName("img")
-    document.querySelector('.allPosts').childNodes.forEach( ( item )=>{
+    document.querySelector('.allPosts').childNodes.forEach( (item,index) => {
       item.addEventListener("dblclick",()=>{
         item.requestFullscreen().catch(console.log)
+      })
+      item.addEventListener("fullscreenchange",()=>{
+        item.fullscreen = !item.fullscreen
+        if(item.fullscreen==true){
+          item.src = `oldImages/oldpost-${index+1}.png`
+        }else{
+          item.src = `IMAGES/post-${index+1}.png`
+        }
       })
     })
 }

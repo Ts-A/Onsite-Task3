@@ -8,32 +8,11 @@ const path       = require( 'path' ),
 
 const app = express()
 
-const bufferArray = []
 let numberOfPosts = 0
-
-app.set( 'view engine', 'ejs' )
-app.use( express.json() )
-app.use( bodyParser.urlencoded( { extended : true } ) )
-app.set( 'views', path.join( __dirname, '/views' ) )
-app.use( express.static( path.join( __dirname,'/public') ) )
-
-app.get( '/', ( req, res ) => {
-  try{
-    const dir = path.join(__dirname,'/public/IMAGES')
-    fs.readdir( dir, ( err, files ) => {
-      if(err){
-        numberOfPosts = 0
-      } else{
-        numberOfPosts = files.length
-        res.render( "home.ejs" , { numberOfPosts , error : false } )
-      } 
-    })
-  } catch( e ){
-    // res.redirect("/")
-    return res.status(400).render("home",{ numberOfPosts , error : true , message : "errorororr" })
-    // res.status( 400 ).send( "error" )
-  }
-})
+var errorHandle = {
+  error : false,
+  message : "Go add More Images"
+}
 
 const upload = multer({
   limits : {
@@ -46,26 +25,70 @@ const upload = multer({
   }
 })
 
+app.set( 'view engine', 'ejs' )
+app.use( express.json() )
+app.use( bodyParser.urlencoded( { extended : true } ) )
+app.set( 'views', path.join( __dirname, '/views' ) )
+app.use( express.static( path.join( __dirname,'/public') ) )
+
+app.get('/', ( req, res ) => {
+  try{
+    const dir = path.join(__dirname,'/public/IMAGES')
+    fs.readdir( dir, ( err, files ) => {
+      if(err){
+        numberOfPosts = 0
+        errorHandle.error = true
+        errorHandle.message = "Cannot Find Directory"
+        return res.status(400).render("home",{ numberOfPosts , errorHandle })
+      } else
+          numberOfPosts = files.length
+        res.render( "home.ejs" , { numberOfPosts , errorHandle } )
+    })
+  } catch( e ){
+  }
+})
+
 app.post("/", upload.single('post'), async ( req, res )=>{
   try{
-      console.log(req.body)
       if(req.file === undefined){
         throw new Error("cannot read")
       }
+      const oldFile = req.file.buffer
+      fs.writeFile(path.join(__dirname,'/public/oldImages',`oldpost-${++numberOfPosts}.png`),oldFile,(e)=>{
+        if(e){
+          errorHandle.error = true
+          errorHandle.message = "File Uploading Error"
+          return res.redirect("/")
+        }
+        else{
+          errorHandle.error = false
+          errorHandle.message = "Go Add More Images"
+        }
+      })
       const newFile = await sharp(req.file.buffer).resize({height:300,width:300}).png().toBuffer()
-      bufferArray.push(newFile)
-      fs.writeFile(path.join(__dirname,'/public/IMAGES',`post-${++numberOfPosts}.png`),newFile,(e)=>{
-        if(e)
-          return res.status(400).render("home",{ numberOfPosts , error : true , message : "Error" })
-          else
-        return res.render("home",{ numberOfPosts , error : false , message : "Added" })
+      fs.writeFile(path.join(__dirname,'/public/IMAGES',`post-${numberOfPosts}.png`),newFile,(e)=>{
+        if(e){
+          errorHandle.error = true
+          errorHandle.message = "File Uploading Error"
+          return res.redirect("/")
+        }
+        else{
+          errorHandle.error = false
+          errorHandle.message = "Go Add More Images"
+          return res.redirect("/")
+        }
       })
   } catch(e) {
-    return res.status(400).render("home",{ numberOfPosts , error : true , message : "Check Error" })
+    errorHandle.error = true
+    errorHandle.message = "File Empty"
+    return res.redirect("/")
   }
 },(error,req,res,cb)=>{
-  if(error)
-    return res.status(400).render("home",{ numberOfPosts , error : true , message : "Error" })
+ if(error){
+    errorHandle.error = true
+    errorHandle.message = error.message
+    return res.redirect("/")
+  }
 })
 
 app.listen( 5000, ( req, res ) => {
